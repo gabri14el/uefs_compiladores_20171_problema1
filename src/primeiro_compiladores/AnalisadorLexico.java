@@ -29,16 +29,31 @@ public class AnalisadorLexico {
 				System.out.println(aux);
 				char[] texto = aux.toCharArray(); //transforma string em array de char
 				for(k = 0; k < texto.length; k++){ //percorre o texto caracter a caractere
-					if(texto[k] == '\n') linha++;//controle de linha, vai que use né?? 
+					if(texto[k] == '\n' || texto[k] == '\r') linha++;//controle de linha, vai que use né?? 
 					else if(texto[k] == '\t' || texto[k] == ' '); //ignorar os espaços
+					
 					else if(texto[k] == '+' || texto[k] == '*'); //criar token de operador artimetico
+					
 					else if(texto[k] == '-'); //criar método que verifica qual o próximo
+					
 					else if(texto[k] == '/'); //método da barra
+					
 					else if(texto[k] == '&'); //método operador relacional eu acho 
+					
 					else if(texto[k] == '|'); //método operador relacional
+					
 					else if(texto[k] == '='); //método algum operador que eu tenho que ver
+					
 					else if(texto[k] == '<' || texto[k] == '>'); //método operador relacional 
-					else if(texto[k] == '"'); //cadeia de caracteres 
+					
+					else if(texto[k] == '"'); //cadeia de caracteres
+					
+					else if(Character.isLetter(texto[k]));
+					
+					else if(Character.isDigit(texto[k]));
+					
+					else;
+					
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
