@@ -1,6 +1,12 @@
 package primeiro_compiladores;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public class Tabela {
+	
+	public Queue<Token> tokens;
+	
 	public static final String IDENTIFICADOR = "identificador";
 	public static final String PALAVRA_RESERVADA = "palavra reservada";
 	public static final String NUMERO = "numero";
@@ -11,4 +17,18 @@ public class Tabela {
 	public static final String COMENTARIO_DE_BLOCO = "comentario de bloco";
 	public static final String DELIMITADORES = "delimitadores";
 	public static final String CADEIA_DE_CARACTERES = "cadeia de caracteres";
+	
+	
+	
+	public Tabela() {
+		tokens = new LinkedList<>();
+	}
+	
+	public void addToken(String lexema, String tipo, boolean mal_formado) {
+		Token aux = new Token(); 
+		aux.lexema = lexema;
+		aux.tipo = tipo; 
+		aux.mal_formado = mal_formado;
+		tokens.add(aux);
+	}
 }

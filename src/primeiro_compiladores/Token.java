@@ -4,6 +4,7 @@ public class Token {
 	
 	String tipo;
 	String lexema;
+	boolean mal_formado;
 	
 	
 	@Override
