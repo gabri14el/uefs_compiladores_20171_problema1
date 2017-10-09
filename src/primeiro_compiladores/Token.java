@@ -9,7 +9,11 @@ public class Token {
 	
 	@Override
 	public String toString() {
-		return "<"+ lexema+", "+tipo+">";
+		
+		if(!mal_formado)
+			return "<"+ lexema+", "+tipo.toUpperCase()+">";
+		else
+			return "<"+ lexema+", "+tipo.toUpperCase()+" MAL FORMADO>";
 	}
 	
 	public String setTipo(String tip) {
@@ -20,6 +24,8 @@ public class Token {
 	public String setLexema(String lex) {
 		this.lexema = lex;
 		return lexema;
+		
+		
 	}
 
 }

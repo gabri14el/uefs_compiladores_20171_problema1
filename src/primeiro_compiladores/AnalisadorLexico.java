@@ -1,9 +1,12 @@
 package primeiro_compiladores;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -19,6 +22,10 @@ public class AnalisadorLexico {
 	public static void main (String[] argv){
 		AnalisadorLexico b= new AnalisadorLexico();
 		b.start();
+		for (Token t : b.getTokens()) {
+			System.out.println(t);
+		}
+			
 	}
 	
 	
@@ -26,21 +33,29 @@ public class AnalisadorLexico {
 		buffer="";
 		tabela = new Tabela();
 	}
+	
+	public LinkedList<Token> getTokens(){
+		return tabela.tokens;
+	}
 	public void start(){
 		File diretorio = new File("entrada");
 		for (File f : diretorio.listFiles()) { //percorre todos os arquivos do diretório
 			System.out.println("arquivo:" + f.getName());
 			try {
+				
+				linha = 0;
+				tabela = new Tabela();
 				byte[] encoded = Files.readAllBytes(f.toPath());
 				String aux = new String(encoded);
-				
-				System.out.println(aux);
 				texto = aux.toCharArray(); //transforma string em array de char
 				for(k = 0; k < texto.length; k++){ //percorre o texto caracter a caractere
+					
+					System.out.println(buffer);
 					buffer = ""; //limpa o buffer sempre que um lexema novo será analisado
 					buffer+=texto[k]; //sempre adiciona o caractere ao buffer
-					
+					//System.out.println(linha);
 					if(texto[k] == '\n' || texto[k] == '\r') linha++;//controle de linha, vai que use né?? 
+					
 					
 					else if(texto[k] == '\t' || texto[k] == ' '); //ignorar os espaços
 					
@@ -57,10 +72,10 @@ public class AnalisadorLexico {
                                         } //método operador relacional eu acho 
 					
 					else if(texto[k] == '=')
-						criarOperadorLogico();
+						criarOperadorRelacional();
 					
 					else if(texto[k] == '<' || texto[k] == '>')
-						criarOperadorLogico();
+						criarOperadorRelacional();
 					
 					else if(texto[k] == '"') {
 						criarCadeiaDeCaracteres();
@@ -81,11 +96,24 @@ public class AnalisadorLexico {
 					else if(Character.isDigit(texto[k]))
 						criarNumero();
 					else
-						tabela.addToken(buffer, "desconhecido", true);
+						tabela.addToken(buffer, Tabela.DESCONHECIDO, true); //quando erro desconhecido acontece
+				
 					
 				}
+				
+				File saida = new File(f.getAbsolutePath()+"_saida.txt");
+				BufferedWriter writer = new BufferedWriter(new FileWriter(saida));
+				
+				
+				for (Token t : getTokens()) {
+					writer.write(t.toString());
+					writer.newLine();	
+				}
+				
+				writer.flush();
+				writer.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.out.println("deu ruim aqui");
 			}
 		}
 		
@@ -97,17 +125,17 @@ public class AnalisadorLexico {
             if(aux == '&'){
                 if(texto[k] == '&'){
                     buffer+=texto[k];
-                    tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+                    tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, false);
                 }else{
-                	tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, true);
+                	tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, true);
                     k--;
                 }
             }else{
                 if(texto[k] == '|'){
                 	buffer+=texto[k];
-                    tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+                    tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, false);
                 }else{
-                	tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, true);
+                	tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, true);
                     k--;
                 }
             }
@@ -156,7 +184,6 @@ public class AnalisadorLexico {
             }
             else if(texto[k] == '*') {
             	buffer+=texto[k];
-            	k++;
             	criarComentarioDeBloco();
             }
             else{
@@ -192,7 +219,7 @@ public class AnalisadorLexico {
 			criarNumero();
 		}
 		else  {
-			buffer+=texto[k];
+			k--;
 			criarOperadorAritmetico(); 
 		}
 	}
@@ -215,15 +242,17 @@ public class AnalisadorLexico {
 				k--; //pra garantir que no k++ ele pegará o finalizador;
 			}
 			else {
+				System.out.println("merda em");
 				buffer+=texto[k];
+				k++;
 				achouErro = true;
 			}
-			/*if(Character.isLetter(texto[k]) || Character.isDigit(texto[k]) || texto[k]=='_'){
-				
-			}*/
 		}
 		
-		tabela.addToken(buffer, Tabela.IDENTIFICADOR, achouErro);
+		if(!ePalavraReservada())
+			tabela.addToken(buffer, Tabela.IDENTIFICADOR, achouErro);
+		else
+			tabela.addToken(buffer, Tabela.PALAVRA_RESERVADA, false);
 	}
 	
 	//método que verifica possíveis finalizadores em geral: espaços, operadores e delimitadores
@@ -242,7 +271,11 @@ public class AnalisadorLexico {
 	
 	
 	private boolean ePalavraReservada() {
-		return false;
+		String cadeiaDeChar = buffer;
+		if(cadeiaDeChar.equals("class") || cadeiaDeChar.equals("final") || cadeiaDeChar.equals("if") || cadeiaDeChar.equals("else") || cadeiaDeChar.equals("for") || cadeiaDeChar.equals("scan") || cadeiaDeChar.equals("print") || cadeiaDeChar.equals("int") || cadeiaDeChar.equals("float") || cadeiaDeChar.equals("bool") || cadeiaDeChar.equals("true") || cadeiaDeChar.equals("false") || cadeiaDeChar.equals("string"))
+			return true;
+		else
+			return false;
 	}
 	
 	private void criarOperadorAritmetico() {
@@ -278,6 +311,7 @@ public class AnalisadorLexico {
 		boolean terminou = false;
 		boolean achouAsterisco = false;
 		while(!terminou && k < texto.length) {
+			k++;
 			buffer+=texto[k];
 			if(texto[k] == '*') achouAsterisco = true;
 			else if(texto[k] == '/')
@@ -297,20 +331,27 @@ public class AnalisadorLexico {
 	
 	private void criarCadeiaDeCaracteres() {
 		boolean terminou = false;
-		boolean achouBarra = false;
+		boolean achouAspas = false;
 		while(k<texto.length && !terminou) {
-			k++; 
-			buffer+=texto[k];
+			k++;
 			if(texto[k] == '\\'){
-					achouBarra = true;
-			} else if(texto[k] == '"') {
-				if (!achouBarra)
-					terminou = true;
-				else
-					achouBarra = false;
+				buffer+=texto[k];
+				System.out.println(buffer);
+				if(texto[k+1] == '"'){
+					k++;
+					buffer+=texto[k];
+				}
+			}else if(texto[k] == '"'){
+				terminou = true;
+				buffer+=texto[k];
+				achouAspas = true;
+			}
+			else if(texto[k] == '\n') terminou = true;
+			else{
+				buffer+=texto[k];
 			}
 		}
-		tabela.addToken(buffer, Tabela.CADEIA_DE_CARACTERES, !terminou);
+		tabela.addToken(buffer, Tabela.CADEIA_DE_CARACTERES, !achouAspas);
 	}
 
 }
