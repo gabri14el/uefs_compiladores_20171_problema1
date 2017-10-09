@@ -53,33 +53,35 @@ public class AnalisadorLexico {
                                         }
 					
 					else if(texto[k] == '&' || texto[k] == '|'){
-                                            criarOperadorRelacional();
+                                            criarOperadorLogico();
                                         } //método operador relacional eu acho 
 					
-					else if(texto[k] == '='); //método algum operador que eu tenho que ver
+					else if(texto[k] == '=')
+						criarOperadorLogico();
 					
-					else if(texto[k] == '<' || texto[k] == '>'); //método operador relacional 
+					else if(texto[k] == '<' || texto[k] == '>')
+						criarOperadorLogico();
 					
 					else if(texto[k] == '"') {
 						criarCadeiaDeCaracteres();
 					}
 					
-					else if(texto[k] == '+' || texto[k] == '*' || texto[k] == '%');
+					else if(texto[k] == '+' || texto[k] == '*' || texto[k] == '%')
+						criarOperadorAritmetico();
 					
-					else if(texto[k] == '!');
+					else if(texto[k] == '!') 
+						seExlamacaoAparecer();
 					
-					else if(eDelimitador());
+					else if(eDelimitador()) 
+						criarDelimitador();
 	
-					
-					else if(Character.isLetter(texto[k])) {
-						buffer += texto[k];
-						k++;
+					else if(Character.isLetter(texto[k])) 
 						criarIdentificador();
-					}
 					
-					else if(Character.isDigit(texto[k]));
-						
-					else;
+					else if(Character.isDigit(texto[k]))
+						criarNumero();
+					else
+						tabela.addToken(buffer, "desconhecido", true);
 					
 				}
 			} catch (IOException e) {
@@ -89,7 +91,7 @@ public class AnalisadorLexico {
 		
 	}
 	
-        private void criarOperadorRelacional(){
+        private void criarOperadorLogico(){
             char aux = texto[k];
             k++;
             if(aux == '&'){
@@ -141,6 +143,9 @@ public class AnalisadorLexico {
             tabela.addToken(buffer, Tabela.NUMERO, achouErro);
         }
         
+	
+		
+	
         
         private void seBarraAparecer(){
             k++; 
@@ -159,7 +164,15 @@ public class AnalisadorLexico {
                 tabela.addToken(buffer, Tabela.OPERADOR_ARITMETICO, false);
             }
         }
-        
+     
+    private void seExlamacaoAparecer() {
+    	if(texto[k+1] == '=') {
+    		buffer+=texto[++k];
+    		tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+    	}else {
+    		tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, false);
+    	}
+    }
     /**
      * Método chamado quando um "-" aparece. 
      * Esse método define se o hifen faz parte de um número ou se 
@@ -237,8 +250,18 @@ public class AnalisadorLexico {
 	}
 	
 	
-	private void criarOperadorLogico() {
-		
+	private void criarOperadorRelacional() {
+		if(texto[k] == '=') {
+			tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+		}else if(texto[k] == '<' || texto[k] == '>') {
+			if(texto[k+1] == '=') {
+				buffer+=texto[++k];
+				tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+			}else
+			{
+				tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+			}
+		}
 	}
 	
 	private void criarComentarioDeLinha() {
@@ -269,7 +292,7 @@ public class AnalisadorLexico {
 	
         
        private void criarDelimitador() {
-		
+		tabela.addToken(buffer, Tabela.DELIMITADORES, false);
 	}
 	
 	private void criarCadeiaDeCaracteres() {

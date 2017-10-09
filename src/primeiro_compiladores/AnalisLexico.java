@@ -22,7 +22,7 @@ public class AnalisLexico {
 	
 	public List<String> leArquivo() throws IOException {
 		
-		File file = new File("C:/Users/SSENN4/Documents/teste.txt");
+		File file = new File("entrada");
 		BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
 		String line = null;
 		List<String> arrayDeLetras = new ArrayList<String>();
@@ -50,30 +50,30 @@ public class AnalisLexico {
 		 }
 		 else if(cadeiaDeChar.matches("(-\\\\s)?\\\\d+(\\\\.\\\\d+)?")) {
 			 token.setLexema(cadeiaDeChar);
-			 token.setTipo("NÚMERO");
+			 token.setTipo("Nï¿½MERO");
 		 }
 		 else if(cadeiaDeChar.matches("//(\\\\w|\\\\s)* | (/\\\\* ( . | \\\\s | \\\\n)* \\\\*/)")) {
 			 token.setLexema(cadeiaDeChar);
-			 token.setTipo("COMENTÁRIO");
+			 token.setTipo("COMENTï¿½RIO");
 		 }
-		 else if(cadeiaDeChar.matches("\\\\”( . | \\\\s | \\\\\\” )*\\\\”")) {
+		 else if(cadeiaDeChar.matches("\\\\ï¿½( . | \\\\s | \\\\\\ï¿½ )*\\\\ï¿½")) {
 			 token.setLexema(cadeiaDeChar);
 			 token.setTipo("CADEIA DE CARACTERES");
 		 }
 		 else if(cadeiaDeChar.matches("(&& | \\|\\| | !)")) {
 			 token.setLexema(cadeiaDeChar);
-			 token.setTipo("OPERADOR LÓGICO");
+			 token.setTipo("OPERADOR Lï¿½GICO");
 		 }
-		 /*Verificar se os próximos estão certos
+		 /*Verificar se os prï¿½ximos estï¿½o certos
 		  *else if(cadeiaDeChar.matches("+ | - | * | \\/ | %")) {
 			 token.setLexema(cadeiaDeChar);
-			 token.setTipo("OPERADOR ARITMÉTICO");
+			 token.setTipo("OPERADOR ARITMï¿½TICO");
 		 }
 		 else if(cadeiaDeChar.matches("; | , | \\( | \\) | \\[ | \\] | \\{ | \\} | :")) {
 			 token.setLexema(cadeiaDeChar);
 			 token.setTipo("DELIMITADORES");
 		 }
-		 else if(cadeiaDeChar.matches("#Não faço a mínima#")) {
+		 else if(cadeiaDeChar.matches("#Nï¿½o faï¿½o a mï¿½nima#")) {
 			 token.setLexema(cadeiaDeChar);
 			 token.setTipo("OPERADOR RELACIONAL");
 		 } 
@@ -94,9 +94,9 @@ public class AnalisLexico {
 		writer.write(saidaArquivo);
 		writer.newLine();
 		
-		//Criando o conteúdo do arquivo
+		//Criando o conteï¿½do do arquivo
 		writer.flush();
-		//Fechando conexão e escrita do arquivo.
+		//Fechando conexï¿½o e escrita do arquivo.
 		writer.close();
 	}
 }
