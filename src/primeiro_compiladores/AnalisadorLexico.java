@@ -16,7 +16,7 @@ public class AnalisadorLexico {
 	int linha = 1;
 	char[] texto;
 	Tabela tabela;
-	
+	LinkedList<BufferedWriter> writeres;
 	String regex_letras = "[a-zA-Z]";
 	String regex_numeros = "[0-9]";	
 	public static void main (String[] argv){
@@ -32,6 +32,7 @@ public class AnalisadorLexico {
 	public AnalisadorLexico() {
 		buffer="";
 		tabela = new Tabela();
+		writeres = new LinkedList<>();
 	}
 	
 	public LinkedList<Token> getTokens(){
@@ -43,7 +44,7 @@ public class AnalisadorLexico {
 			System.out.println("arquivo:" + f.getName());
 			try {
 				
-				linha = 0;
+				linha = 1;
 				tabela = new Tabela();
 				byte[] encoded = Files.readAllBytes(f.toPath());
 				String aux = new String(encoded);
@@ -53,11 +54,13 @@ public class AnalisadorLexico {
 					System.out.println(buffer);
 					buffer = ""; //limpa o buffer sempre que um lexema novo será analisado
 					buffer+=texto[k]; //sempre adiciona o caractere ao buffer
-					//System.out.println(linha);
+					
+					
 					if(texto[k] == '\n' || texto[k] == '\r') linha++;//controle de linha, vai que use né?? 
 					
 					
 					else if(texto[k] == '\t' || texto[k] == ' '); //ignorar os espaços
+					
 					
 					else if(texto[k] == '-'){
 										seHifenAparecer();
@@ -96,7 +99,7 @@ public class AnalisadorLexico {
 					else if(Character.isDigit(texto[k]))
 						criarNumero();
 					else
-						tabela.addToken(buffer, Tabela.DESCONHECIDO, true); //quando erro desconhecido acontece
+						tabela.addToken(linha,buffer, Tabela.DESCONHECIDO, true); //quando erro desconhecido acontece
 				
 					
 				}
@@ -110,36 +113,56 @@ public class AnalisadorLexico {
 					writer.newLine();	
 				}
 				
-				writer.flush();
-				writer.close();
+			writeres.add(writer);	
 			} catch (IOException e) {
 				System.out.println("deu ruim aqui");
 			}
 		}
+		for (BufferedWriter writer : writeres) {
+			try {
+				//imprime os arquivos
+				writer.flush();
+				writer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
 		
 	}
 	
+	/**
+	 * Método responsável por criar operador lógico. 
+	 * Ele testa o primeiro simbolo do operador e a partir dele define 
+	 * se o eperador é válido ou não.
+	 */
         private void criarOperadorLogico(){
             char aux = texto[k];
             k++;
             if(aux == '&'){
                 if(texto[k] == '&'){
                     buffer+=texto[k];
-                    tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, false);
+                    tabela.addToken(linha,buffer, Tabela.OPERADOR_LOGICO, false);
                 }else{
-                	tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, true);
+                	tabela.addToken(linha,buffer, Tabela.OPERADOR_LOGICO, true); //caso não ache outro símblo, cria token mal formado
                     k--;
                 }
             }else{
                 if(texto[k] == '|'){
                 	buffer+=texto[k];
-                    tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, false);
+                    tabela.addToken(linha,buffer, Tabela.OPERADOR_LOGICO, false);
                 }else{
-                	tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, true);
+                	tabela.addToken(linha,buffer, Tabela.OPERADOR_LOGICO, true);
                     k--;
                 }
             }
         }
+        
+        /**
+         * Método responsável por criar um número. 
+         * 
+         */
 	private void criarNumero(){
             boolean continua = true; 
             boolean achouErro = false;
@@ -148,27 +171,30 @@ public class AnalisadorLexico {
             while(k < texto.length && continua){
             	k++;
             	String aux = Character.toString(texto[k]);
+            	
+            	//verifica se é um dígito
                 if(aux.matches(regex_numeros)){
-                    buffer+=aux;
+                    buffer+=aux; //adiciona ao buffer
                 }else if(texto[k] == '.'){
                 	buffer+=aux;
-                    if(achouPonto) achouErro = true;
+                    if(achouPonto) achouErro = true; //verifica se achou um ponto
                     else {
-                    	achouPonto = true;
+                    	achouPonto = true; //guarda sempre quando se achar um ponto
                     }
                     
                 }
-                else if(eFinalizador()){
+                else if(eFinalizador()){ //verifica se é um dos finalizadores
                     continua = false;
                 }
+                else if(texto[k] == '\n' || texto[k] == '\r') 
+                    linha++;
                 else {
                 	achouErro = true;
                 	buffer+=aux;
                 }
-                
             }
             k--;
-            tabela.addToken(buffer, Tabela.NUMERO, achouErro);
+            tabela.addToken(linha,buffer, Tabela.NUMERO, achouErro); //cria token com base ba variável que define se um erro foi encontrado
         }
         
 	
@@ -180,24 +206,24 @@ public class AnalisadorLexico {
             if(texto[k] == '/'){
             	buffer+=texto[k];
             	k++;
-                criarComentarioDeLinha();
+                criarComentarioDeLinha(); //caso apareçam duas barras
             }
             else if(texto[k] == '*') {
             	buffer+=texto[k];
-            	criarComentarioDeBloco();
+            	criarComentarioDeBloco(); //caso apareça /*
             }
             else{
                 k--;
-                tabela.addToken(buffer, Tabela.OPERADOR_ARITMETICO, false);
+                tabela.addToken(linha,buffer, Tabela.OPERADOR_ARITMETICO, false); //caso em que outra coisa aparece e a barra é um operador aritmetico
             }
         }
      
     private void seExlamacaoAparecer() {
     	if(texto[k+1] == '=') {
     		buffer+=texto[++k];
-    		tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+    		tabela.addToken(linha,buffer, Tabela.OPERADOR_RELACIONAL, false);  //operador relacional
     	}else {
-    		tabela.addToken(buffer, Tabela.OPERADOR_LOGICO, false);
+    		tabela.addToken(linha,buffer, Tabela.OPERADOR_LOGICO, false); //operador logico
     	}
     }
     /**
@@ -208,8 +234,14 @@ public class AnalisadorLexico {
 	private void seHifenAparecer() {
 		boolean acabaramEspacos = false;
 		k++;
+		if(texto[k] == '\r' || texto[k] == '\n') {
+			linha++;
+		}
+		
+		
 		while(eEspaco(texto[k]) && !acabaramEspacos) {
 			k++;
+			if(texto[k] == '\r' || texto[k] == '\n') linha++;
 			if(!eEspaco(texto[k])) {
 				acabaramEspacos = true;
 			}
@@ -226,7 +258,7 @@ public class AnalisadorLexico {
 	
 	
 	private boolean eEspaco(char c) {
-		return c == '\t' || c == ' ' || c == '\n' || c == '\r';
+		return c == '\t' || c == ' ' || c == '\n' || c == '\r'; //verifica se é um dos espaços
 	}
 	private void criarIdentificador() {
 		boolean continua = true;
@@ -250,9 +282,9 @@ public class AnalisadorLexico {
 		}
 		
 		if(!ePalavraReservada())
-			tabela.addToken(buffer, Tabela.IDENTIFICADOR, achouErro);
+			tabela.addToken(linha,buffer, Tabela.IDENTIFICADOR, achouErro);
 		else
-			tabela.addToken(buffer, Tabela.PALAVRA_RESERVADA, false);
+			tabela.addToken(linha,buffer, Tabela.PALAVRA_RESERVADA, false);
 	}
 	
 	//método que verifica possíveis finalizadores em geral: espaços, operadores e delimitadores
@@ -279,54 +311,56 @@ public class AnalisadorLexico {
 	}
 	
 	private void criarOperadorAritmetico() {
-		tabela.addToken(buffer, Tabela.OPERADOR_ARITMETICO, false);
+		tabela.addToken(linha,buffer, Tabela.OPERADOR_ARITMETICO, false);
 	}
 	
 	
 	private void criarOperadorRelacional() {
 		if(texto[k] == '=') {
-			tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+			tabela.addToken(linha,buffer, Tabela.OPERADOR_RELACIONAL, false);
 		}else if(texto[k] == '<' || texto[k] == '>') {
 			if(texto[k+1] == '=') {
 				buffer+=texto[++k];
-				tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+				tabela.addToken(linha,buffer, Tabela.OPERADOR_RELACIONAL, false);
 			}else
 			{
-				tabela.addToken(buffer, Tabela.OPERADOR_RELACIONAL, false);
+				tabela.addToken(linha,buffer, Tabela.OPERADOR_RELACIONAL, false);
 			}
 		}
 	}
 	
 	private void criarComentarioDeLinha() {
 		while(texto[k] != '\n' && texto[k] != '\r' && k<texto.length) {
-			buffer+=texto[k];
-			k++;
+                    buffer+=texto[k];
+                    k++;
 		}
 		k--;
-		tabela.addToken(buffer, Tabela.COMENTARIO_DE_BLOCO, false);
-		
+		tabela.addToken(linha,buffer, Tabela.COMENTARIO_DE_LINHA, false);
 	}
 	
 	private void criarComentarioDeBloco() {
 		boolean terminou = false;
 		boolean achouAsterisco = false;
+		k++;
 		while(!terminou && k < texto.length) {
-			k++;
+			
 			buffer+=texto[k];
-			if(texto[k] == '*') achouAsterisco = true;
-			else if(texto[k] == '/')
-				if(achouAsterisco) terminou = true;
-				else {
-					achouAsterisco = false;
+                        
+			if(texto[k] == '*') {
+				if(texto[k+1] == '/') {
+					buffer+=texto[++k];
+					terminou = true;
+				}
 			}
+			k++;
 		}
-		
-		tabela.addToken(buffer, Tabela.COMENTARIO_DE_LINHA, !terminou);
+		k--;
+		tabela.addToken(linha,buffer, Tabela.COMENTARIO_DE_BLOCO, !terminou);
 	}
 	
         
        private void criarDelimitador() {
-		tabela.addToken(buffer, Tabela.DELIMITADORES, false);
+		tabela.addToken(linha,buffer, Tabela.DELIMITADORES, false);
 	}
 	
 	private void criarCadeiaDeCaracteres() {
@@ -346,12 +380,16 @@ public class AnalisadorLexico {
 				buffer+=texto[k];
 				achouAspas = true;
 			}
-			else if(texto[k] == '\n') terminou = true;
+			else if(texto[k] == '\n' || texto[k] == '\r'){
+                            terminou = true;
+                            k--;
+                        }
 			else{
 				buffer+=texto[k];
 			}
 		}
-		tabela.addToken(buffer, Tabela.CADEIA_DE_CARACTERES, !achouAspas);
+		tabela.addToken(linha,buffer, Tabela.CADEIA_DE_CARACTERES, !achouAspas);
+		
 	}
 
 }

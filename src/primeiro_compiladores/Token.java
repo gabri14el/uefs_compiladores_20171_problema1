@@ -5,15 +5,16 @@ public class Token {
 	String tipo;
 	String lexema;
 	boolean mal_formado;
+	int linha;
 	
 	
 	@Override
 	public String toString() {
 		
 		if(!mal_formado)
-			return "<"+ lexema+", "+tipo.toUpperCase()+">";
+			return "<"+linha+" : "+ lexema+", "+tipo.toUpperCase()+">";
 		else
-			return "<"+ lexema+", "+tipo.toUpperCase()+" MAL FORMADO>";
+			return "<"+linha+" : "+ lexema+", "+tipo.toUpperCase()+" MAL FORMADO>";
 	}
 	
 	public String setTipo(String tip) {
