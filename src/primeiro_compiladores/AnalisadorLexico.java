@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
-
+//testando commit
 public class AnalisadorLexico {
 	String buffer; 
 	int k = 0; //ultimo caractere lido no texto
